@@ -58,6 +58,25 @@ def imdb_vs_country(df):
 	imdb_country.columns = ['imdb_mean', 'movies_count']
 	print(imdb_country.sort_values(by='imdb_mean', ascending=False))
 
+def imdb_vs_movie_year(df):
+	imdb_movie_year = df[['imdb_score', 'title_year']]
+	imdb_movie_year.dropna(inplace=True)
+	imdb_movie_year = imdb_movie_year.groupby('title_year').agg(['mean', 'count'])
+	imdb_movie_year.columns = ['imdb_mean', 'movies_count']
+	print(imdb_movie_year)
+
+def imdb_vs_movie_facebook_likes(df):
+	df2 = df[['imdb_score', 'movie_facebook_likes', 'movie_title']]
+	df2.dropna(inplace=True)
+	df2 = df2.sort_values(by='movie_facebook_likes', ascending=False)
+	print(df2[ df2['movie_facebook_likes'] > 0])
+
+def imdb_vs_director_facebook_popularity(df):
+	df2 = df[['imdb_score', 'director_facebook_likes', 'director_name']]
+	df2 = df2.groupby('director_name').agg('mean')
+	df2 = df2.sort_values('director_facebook_likes', ascending=False)
+	print(df2[ df2['director_facebook_likes'] > 0])
+
 df = get_dataset()
 
 plot_keywords = get_plot_keywords_count()
@@ -65,10 +84,31 @@ plot_keywords = get_plot_keywords_count()
 
 #top_20_imdb_scores(df)
 #group_by_imdb_score(df)
-imdb_vs_country(df)
+#imdb_vs_country(df)
+#imdb_vs_movie_year(df)
+#imdb_vs_movie_facebook_likes(df)
+imdb_vs_director_facebook_popularity(df)
 
-# imdb vs country | imdb vs movie year | imdb vs facebook popularity 
-# imdb vs director facebook popularity | imdb vs actor/actresses facebook popularity
+# (OK) imdb vs country | (OK) imdb vs movie year | (OK) imdb vs facebook popularity 
+# (OK) imdb vs director facebook popularity | imdb vs actor/actresses facebook popularity
+# imdb vs genre | genre vs movies count | director vs number of movies | director vs imdb score
+# comparision between budget and gross
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Analysis of correlation
 
