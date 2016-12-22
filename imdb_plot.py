@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib import style
+import numpy as np
 
 style.use('fivethirtyeight')
 
@@ -60,4 +61,36 @@ def plot_top_x_genres(c, x=10):
 	plt.ylabel('Movies count')
 	plt.title('Movies by Genres')
 	plt.legend()
+	plt.show()
+
+def plot_top_x_profitable_movies(df, x=20):
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+	# get only the movie_title and profit columns. And only the X first rows
+	df2 = df.sort_values(by='profit', ascending=False)[:x]
+	df2 = df2.sort_values(by='profit')
+	# removing the \xa0 from the movie titles 
+	df2['movie_title'] = df2.apply(lambda x: x['movie_title'].replace('\xa0', ''), axis=1)
+	xs = df2['movie_title'].tolist()
+	ys = df2['profit'].tolist()
+	
+	x2 = np.arange(len(xs))
+
+	ax1.barh(x2, ys, label='Profit', color='c')
+	ax1.set_yticks(x2 + 0.3)
+	ax1.set_yticklabels(xs)
+	#plt.yticks(x2, xs, va='center')
+	
+	# show values of each bar
+	for i, v in enumerate(ys):
+		ax1.text(v*1.03, i + .15, str(v))
+
+	for label in ax1.yaxis.get_ticklabels():
+		print(label)
+
+
+	plt.subplots_adjust(left=0.30)
+	plt.xlabel('Profit')
+	plt.title('Top '+str(x)+' profitable movies')
+	plt.legend(loc=4)
 	plt.show()

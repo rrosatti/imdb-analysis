@@ -80,6 +80,19 @@ def director_vs_number_of_movies(df):
 	df2 = df2.sort_values(by='imdb_mean', ascending=False)
 	print(df2)
 
+'''
+This is a superficial comparision between budget and gross. 
+I'm not considering a bunch of facts like: 
+	currency(Dollar, Real, etc)
+	the 'value' of dollar in the course of time
+'''
+def budget_vs_gross(df):
+	df2 = df[['movie_title', 'budget', 'gross']]
+	df2['profit'] = df['gross'] - df['budget']
+	df2.dropna(inplace=True)
+	#print(df2)
+	return df2
+
 df = get_dataset()
 
 #plot_keywords = get_plot_keywords_count()
@@ -94,11 +107,13 @@ df = get_dataset()
 #imdb_vs_cast_facebook_likes(df)
 #c = get_genres_count(df)
 #iplot.plot_top_x_genres(c, 15)
-director_vs_number_of_movies(df)
+#director_vs_number_of_movies(df)
+df2 = budget_vs_gross(df)
+iplot.plot_top_x_profitable_movies(df2)
 
 # (OK) imdb vs country | (OK) imdb vs movie year | (OK) imdb vs facebook popularity 
 # (OK) imdb vs director facebook popularity | (OK) imdb vs cast facebook popularity
-# (OK) imdb vs genre | (OK) genre vs movies count | director vs number of movies | director vs imdb score
+# (OK) imdb vs genre | (OK) genre vs movies count | (OK) director vs number of movies | (OK) director vs imdb score
 # comparision between budget and gross
 
 
