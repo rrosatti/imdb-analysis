@@ -85,10 +85,6 @@ def plot_top_x_profitable_movies(df, x=20):
 	for i, v in enumerate(ys):
 		ax1.text(v*1.03, i + .15, str(v))
 
-	for label in ax1.yaxis.get_ticklabels():
-		print(label)
-
-
 	plt.subplots_adjust(left=0.30)
 	plt.xlabel('Profit')
 	plt.title('Top '+str(x)+' profitable movies')

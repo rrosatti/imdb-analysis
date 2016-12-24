@@ -3,6 +3,7 @@ import pandas as pd
 from collections import Counter
 import numpy as np
 import imdb_plot as iplot
+import math
 
 data_path = 'C:/Users/rodri/OneDrive/Documentos/python/data/'
 
@@ -90,12 +91,88 @@ def budget_vs_gross(df):
 	df2 = df[['movie_title', 'budget', 'gross']]
 	df2['profit'] = df['gross'] - df['budget']
 	df2.dropna(inplace=True)
+	df2.drop_duplicates(['movie_title'], inplace=True)
 	#print(df2)
 	return df2
 
+def keywords_weight(df, plot_count):
+	# drop all the rows where plot_keywords is empty (NaN)
+	df.dropna(subset=['plot_keywords'], inplace=True)
+	df2 = df[['plot_keywords', 'imdb_score']]
+
+	# loop through plot_keywords and imdb_score in order to get the imdb_score SUM for each word
+	plot_imdb = {}
+	plot_keywords = df2['plot_keywords'].tolist()
+	imdb_score = df2['imdb_score'].tolist()
+	for pltws, imdb in zip(plot_keywords, imdb_score):
+		for w in pltws.split('|'):
+			if plot_imdb.get(w): 
+				plot_imdb[w] += imdb
+			else:
+				plot_imdb[w] = imdb
+
+	# get the MEAN imdb score for each word
+	for w, s in plot_imdb.items():
+		plot_imdb[w] = round(s/plot_count[w], 1)
+
+	# convert from Counter (plot_count) to DataFrame
+	df3 = pd.DataFrame.from_dict(plot_count, orient='index').reset_index()
+	df3.columns = ['plot_keyword', 'count']
+	df3.set_index('plot_keyword', inplace=True)
+	
+	# convert from dict (plot_imdb) to DataFrame
+	df4 = pd.DataFrame.from_dict(plot_imdb, orient='index').reset_index()
+	df4.columns = ['plot_keyword', 'imdb_score_mean']
+	df4.set_index('plot_keyword', inplace=True)
+
+	# join DataFrames
+	df5 = df3.join(df4)
+	
+	# Let's measure the two criteria on similar numerical scale, and then assign the importance (weights) to those criteria
+	# The scale I'll use is 0-100 for both variables (count and imdb score)
+	# Step 1: get the max and min from each variable
+	countMax = df5['count'].max()
+	countMin = df5['count'].min()
+	imdbMax = df5['imdb_score_mean'].max()
+	imdbMin = df5['imdb_score_mean'].min()
+
+	# Step 2: get the weight using the formula: (x-min)/(max-min)*100
+	df5['count_weight'] = (df5['count']-countMin)/(countMax-countMin)*100
+	df5['imdb_weight'] = (df5['imdb_score_mean']-imdbMin)/(imdbMax-imdbMin)*100
+
+	# Step 3: Calculate the weighted average
+	# Here I'll assume the weight of imdb is 75%. Hence, the weight of count will be 25%.
+	df5['weighted_average'] = round( (.25*df5['count_weight'] + .75*df5['imdb_weight']), 1)
+
+	df5 = df5['weighted_average']
+	# convert df5 to dict
+	weighted_avg = df5.to_dict()
+	
+	# apply the weighted average to plot_keywords in the original DF
+	# remove the '\xa0' character from the movie titles
+	df['movie_title'] = df.apply(lambda x: x['movie_title'].replace('\xa0', ''), axis=1)	
+	movie_titles = df['movie_title'].tolist()
+	df.set_index('movie_title', inplace=True)
+	plot_keywords_weight = {}
+	# loop through each list of words of each row, and then calculate the weight average
+	for mt, pltws in zip(movie_titles, plot_keywords):
+		weight = 0
+		for w in pltws.split('|'):
+			weight += weighted_avg[w]
+		_len = len(pltws.split('|'))
+		plot_keywords_weight[mt] = round(weight/_len, 1)
+
+	# convert from dict (plot_keywords_weight) to DataFrame
+	df6 = pd.DataFrame.from_dict(plot_keywords_weight, orient='index')
+	df6.columns = ['plot_keywords_weight']
+	# join both tables
+	df7 = df.join(df6)
+	print(df7.head())
+	return df7, weighted_avg
+
 df = get_dataset()
 
-#plot_keywords = get_plot_keywords_count()
+plot_keywords = get_plot_keywords_count()
 #iplot.plot_top_10_plot_keywords(plot_keywords)
 
 #top_20_imdb_scores(df)
@@ -108,48 +185,22 @@ df = get_dataset()
 #c = get_genres_count(df)
 #iplot.plot_top_x_genres(c, 15)
 #director_vs_number_of_movies(df)
-df2 = budget_vs_gross(df)
-iplot.plot_top_x_profitable_movies(df2)
+#df2 = budget_vs_gross(df)
+#iplot.plot_top_x_profitable_movies(df2, 20)
+df = df[['movie_title', 'movie_facebook_likes', 'cast_total_facebook_likes', 'plot_keywords', 'imdb_score']]
+df.drop_duplicates(['movie_title'], inplace=True)
+df2 = keywords_weight(df, plot_keywords)
 
 # (OK) imdb vs country | (OK) imdb vs movie year | (OK) imdb vs facebook popularity 
 # (OK) imdb vs director facebook popularity | (OK) imdb vs cast facebook popularity
 # (OK) imdb vs genre | (OK) genre vs movies count | (OK) director vs number of movies | (OK) director vs imdb score
-# comparision between budget and gross
+# (OK) comparision between budget and gross
 
+# Machine Learning
+# Features: movie_facebook_likes, cast_facebook_likes? (director, actor1, actor2, actor3), plot_keywords? (assign a weight to each word?)
+# Label: imdb_score
 
+# Data to be scrapped
+# movie_title (original title), movie_year, plot_keywords, movie_facebook_likes, director_name, director_facebook_likes, actor_1_name
+# actor_1_facebook_likes (the same for actor 2 and 3)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Analysis of correlation
-
-
-'''
-fig = plt.figure()
-ax1 = plt.subplot2grid((2,1), (0,0))
-ax2 = plt.subplot2grid((2,1), (1,0), sharex=ax1)
-
-df.sort('imdb_score', ascending=False, inplace=True)
-df.reset_index(inplace=True)
-#print(df.head())
-
-df['imdb_score'][:10].plot(ax=ax1, label='IMDB Score', color='g')
-df['movie_facebook_likes'][:10].plot(ax=ax2, label='Movie Facebook Likes', color='y')
-
-plt.legend(loc=4)
-plt.show()
-
-print(df.head())
-
-'''
