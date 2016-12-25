@@ -4,6 +4,7 @@ from collections import Counter
 import numpy as np
 import imdb_plot as iplot
 import math
+import imdb_scraping as iscrap
 
 data_path = 'C:/Users/rodri/OneDrive/Documentos/python/data/'
 
@@ -187,20 +188,24 @@ plot_keywords = get_plot_keywords_count()
 #director_vs_number_of_movies(df)
 #df2 = budget_vs_gross(df)
 #iplot.plot_top_x_profitable_movies(df2, 20)
-df = df[['movie_title', 'movie_facebook_likes', 'cast_total_facebook_likes', 'plot_keywords', 'imdb_score']]
-df.drop_duplicates(['movie_title'], inplace=True)
-df2 = keywords_weight(df, plot_keywords)
 
+# Preparing data for machine learning
+#df = df[['movie_title', 'movie_facebook_likes', 'cast_total_facebook_likes', 'plot_keywords', 'imdb_score']]
+#df.drop_duplicates(['movie_title'], inplace=True)
+#df2 = keywords_weight(df, plot_keywords)
+iscrap.get_new_movies_coming_soon()
+
+
+# Data Analysis
 # (OK) imdb vs country | (OK) imdb vs movie year | (OK) imdb vs facebook popularity 
 # (OK) imdb vs director facebook popularity | (OK) imdb vs cast facebook popularity
 # (OK) imdb vs genre | (OK) genre vs movies count | (OK) director vs number of movies | (OK) director vs imdb score
 # (OK) comparision between budget and gross
 
-# Machine Learning
-# Features: movie_facebook_likes, cast_facebook_likes? (director, actor1, actor2, actor3), plot_keywords? (assign a weight to each word?)
-# Label: imdb_score
-
 # Data to be scrapped
 # movie_title (original title), movie_year, plot_keywords, movie_facebook_likes, director_name, director_facebook_likes, actor_1_name
 # actor_1_facebook_likes (the same for actor 2 and 3)
 
+# Machine Learning
+# Features: movie_facebook_likes, cast_facebook_likes? (director, actor1, actor2, actor3), plot_keywords? (assign a weight to each word?)
+# Label: imdb_score
