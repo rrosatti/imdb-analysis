@@ -3,6 +3,7 @@ import requests, re
 import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import imdb_util as iutil
 
 coming_soon_url = 'http://www.imdb.com/movies-coming-soon/'
 imdb_url = 'http://www.imdb.com'
@@ -11,25 +12,38 @@ def get_new_movies_coming_soon():
 	# get current date and the date for the next two months
 	now = datetime.now()
 	next_month = now + relativedelta(months=+1)
-	next_month_2 = next_month + relativedelta(months=+1)
+	#next_month_2 = next_month + relativedelta(months=+1)
 	# format dates to Y-m
 	now = now.strftime('%Y-%m')
 	next_month = next_month.strftime('%Y-%m')
-	next_month_2 = next_month_2.strftime('%Y-%m')
+	#next_month_2 = next_month_2.strftime('%Y-%m')
 
-	soup_coming_soon = BeautifulSoup(requests.get(coming_soon_url+next_month).text, 'html5lib')
-	# the movies are inside tables
-	movies = soup_coming_soon.find_all('table', class_='nm-title-overview-widget-layout')
+	# check if the file already exists
+	if iutil.file_exists(next_month+'.pickle'):
+		detailed_movies_list = iutil.get_pickle(next_month+'.pickle')
+	else:
+		soup_coming_soon = BeautifulSoup(requests.get(coming_soon_url+next_month).text, 'html5lib')
+		# the movies are inside tables
+		movies = soup_coming_soon.find_all('table', class_='nm-title-overview-widget-layout')
 
-	# get a list of movies url
-	movies_url_list = []
-	for movie in movies:
-		movie_href = movie.find_all('h4')[0].find('a')
-		movie_href = movie_href.get('href')
-		movies_url_list.append(movie_href)
+		# get a list of movies url
+		movies_url_list = []
+		for movie in movies:
+			movie_href = movie.find_all('h4')[0].find('a')
+			movie_href = movie_href.get('href')
+			movies_url_list.append(movie_href)
 
-	detailed_movies_list = get_movie_info(movies_url_list, imdb_url)
-	print(detailed_movies_list)
+		detailed_movies_list = get_movie_info(movies_url_list, imdb_url)
+		print(detailed_movies_list)
+		iutil.save_pickle(detailed_movies_list, next_month+'.pickle')	
+
+	# convert from list of dicts to DataFrame	
+	df = pd.DataFrame(detailed_movies_list)
+	df = df[['movie_title', 'movie_year', 'movie_facebook_likes', 'director_name', 'director_facebook_likes', 
+				'actor_1_name', 'actor_1_facebook_likes', 'actor_2_name', 'actor_2_facebook_likes',
+				'actor_3_name', 'actor_3_facebook_likes', 'cast_total_facebook_likes', 'plot_keywords']]
+	#print(df)
+	return df
 
 def get_movie_info(url_list, imdb_url):
 	movies_info_list = []
@@ -49,7 +63,7 @@ def get_movie_info(url_list, imdb_url):
 		movie_detail.update(actors_info)
 
 		# get plot keywords
-		movie_detail['keywords'] = get_plot_keywords(soup_movie_page)
+		movie_detail['plot_keywords'] = get_plot_keywords(soup_movie_page)
 		
 		# movie facebook likes
 		movie_detail['movie_facebook_likes'] = get_movie_facebook_likes(m_url.split('/')[2])
@@ -66,6 +80,7 @@ def get_movie_info(url_list, imdb_url):
 
 		movies_info_list.append(movie_detail)
 		#print(movie_detail)
+
 	return movies_info_list	
 
 def get_movie_title(soup):
@@ -150,4 +165,3 @@ def get_people_facebook_likes(people_id):
 	except Exception as e:
 		print(str(e))
 		return 0
-
