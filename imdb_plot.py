@@ -90,3 +90,59 @@ def plot_top_x_profitable_movies(df, x=20):
 	plt.title('Top '+str(x)+' profitable movies')
 	plt.legend(loc=4)
 	plt.show()
+
+def plot_imdb_vs_country(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((2,1), (0,0), rowspan=1, colspan=1)
+	plt.ylabel('Movie Count')
+	ax2 = plt.subplot2grid((2,1), (1,0), rowspan=1, colspan=1, sharex=ax1)
+	plt.ylabel('IMDB Mean')
+	
+	x = np.arange(len(df))
+	xlabels = np.array(df.reset_index()['country'])
+	y1 = np.array(df['imdb_mean'])
+	y2 = np.array(df['movies_count'])
+
+	ax1.bar(x, y2, color='g')
+	plt.setp(ax1.xaxis.get_ticklabels(), visible=False)
+	ax2.bar(x, y1, color='b')
+	plt.xticks(x, xlabels)
+	ax2.set_ylim([5,8])
+
+	for label in ax2.xaxis.get_ticklabels():
+		label.set_rotation(45)
+
+	# show values of each bar
+	rects = ax1.patches
+	i = 0
+	for rect in rects:
+		height = rect.get_height()
+		# ha = horizontal alignment  |  va = vertical alignment
+		ax1.text(rect.get_x() + rect.get_width()/2, height + 5, y2[i], ha='center', va='bottom')
+		i+=1
+	
+	plt.subplots_adjust(bottom=0.15)
+	plt.legend()
+	plt.show()
+
+def plot_imdb_vs_movie_year(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+	ax2 = plt.twinx(ax1)
+
+	x = np.array(df.reset_index()['title_year'])
+	y1 = np.array(df['imdb_mean'])
+	y2 = np.array(df['movies_count'])
+
+	ax1.bar(x, y2, color='r', alpha=0.3)
+	ax1.legend()
+	ax1.set_ylabel('Movies Count')
+	ax2.plot(x, y1, color='c')
+	ax2.set_ylabel('IMDB Mean')
+	ax2.legend(loc=2)
+
+	ax1.set_xlabel('Years')
+
+	plt.show()
