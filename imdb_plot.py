@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
+from mpl_toolkits.mplot3d import axes3d
 
 style.use('fivethirtyeight')
 
@@ -124,6 +125,7 @@ def plot_imdb_vs_country(df):
 	
 	plt.subplots_adjust(bottom=0.15)
 	plt.legend()
+	plt.title('IMDB Score vs Country')
 	plt.show()
 
 def plot_imdb_vs_movie_year(df):
@@ -144,5 +146,118 @@ def plot_imdb_vs_movie_year(df):
 	ax2.legend(loc=2)
 
 	ax1.set_xlabel('Years')
-
+	plt.title('IMDB Score vs Movie Year')
 	plt.show()
+
+def plot_imdb_vs_movie_facebook_likes(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+
+	x = np.array(df['imdb_score'])
+	y = np.array(df['movie_facebook_likes'])
+
+	ax1.scatter(x, y, color='indigo')
+
+	plt.xlabel('IMDB Score')
+	plt.ylabel('Facebook Likes')
+	plt.title('IMDB Score vs Movie Facebook Likes')
+	plt.legend()
+	plt.show()
+
+def plot_imdb_vs_director_facebook_likes(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+	ax2 = ax1.twinx()
+
+	x = np.arange(len(df))
+	xlabels = np.array(df.reset_index()['director_name'])
+	y1 = np.array(df['imdb_score'])
+	y2 = np.array(df['director_facebook_likes'])
+
+	ax1.bar(x, y2, color='seagreen', alpha=0.3, label='Facebook Likes')
+	ax1.set_ylabel('Director Facebook Likes')
+
+	ax1.set_xticks(x)
+	ax1.set_xticklabels(xlabels, rotation=45)
+	ax1.grid()
+
+	ax2.plot(x, y1, color='darkcyan', ls='--', label='IMDB Score')
+	ax2.set_ylabel('IMDB Score')
+	ax2.set_ylim([1, df['imdb_score'].max()*1.1])
+
+	# add legend for both charts
+	charts1, labels1 = ax1.get_legend_handles_labels()
+	charts2, labels2 = ax2.get_legend_handles_labels()
+	ax2.legend(charts1+charts2, labels1+labels2, loc=0)
+
+	plt.title('Top '+str(len(df))+' most liked directors on IMDB site', fontsize=15)
+	plt.subplots_adjust(bottom=0.25)
+	plt.show()
+
+def plot_imdb_vs_cast_facebook_likes(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1),(0,0))
+	ax2 = ax1.twinx()
+
+	x = np.arange(len(df))
+	xlabels = np.array(df['movie_title'])
+	y1 = np.array(df['cast_total_facebook_likes'])
+	y2 = np.array(df['imdb_score'])
+
+	ax1.bar(x, y1, color='lightcoral', label='Facebook Likes', alpha=0.3)
+	ax1.set_ylabel('Cast Facebook Likes')
+
+	ax1.set_xticks(x)
+	ax1.set_xticklabels(xlabels, rotation=75)
+	ax1.grid()
+
+	ax2.plot(x, y2, color='maroon', label='IMDB Score', ls='--')
+	ax2.set_ylabel('IMDB Score')
+	ax2.set_ylim([1, df['imdb_score'].max()*1.1])
+
+	charts1, labels1 = ax1.get_legend_handles_labels()
+	charts2, labels2 = ax2.get_legend_handles_labels()
+	ax2.legend(charts1+charts2, labels1+labels2, loc=0)
+
+	plt.title('Top '+str(len(df))+' most liked casts on IMDB site', fontsize=15)
+	plt.subplots_adjust(bottom=0.30)
+	plt.show()
+
+def plot_imdb_vs_genre(sorted_genres):
+	print(sorted_genres)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+
+	xs = []
+	ys = []
+
+	for t in sorted_genres:
+		xs.append(t[0])
+		ys.append(t[1])
+
+	x = np.arange(len(xs))
+
+	ax1.bar(x, ys, color='chocolate', label='IMDB Score', width=0.45)
+	ax1.set_ylabel('IMDB Score')
+	ax1.set_xticks(x)
+	ax1.set_xticklabels(xs, rotation=45, ha='center')
+	ax1.set_ylim([np.min(ys)-1, np.max(ys)+1])
+
+	# show values of each bar
+	rects = ax1.patches
+	i = 0
+	for rect in rects:
+		height = rect.get_height()
+		# ha = horizontal alignment  |  va = vertical alignment
+		ax1.text(rect.get_x() + rect.get_width()/2, height*1.01, '%.2f' % (ys[i]), ha='center', va='bottom')
+		i+=1
+
+
+	plt.legend()
+	plt.title('Top '+str(len(sorted_genres))+' most scored genres', fontsize=16)
+	plt.subplots_adjust(bottom=0.15)
+	plt.show()
+

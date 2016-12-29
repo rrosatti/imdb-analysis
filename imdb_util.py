@@ -6,6 +6,7 @@ data_path = 'C:/Users/rodri/OneDrive/Documentos/python/data/' # it's the place w
 
 def get_dataset():
 	df = pd.read_csv(data_path+'movie_metadata.csv')
+	df.drop_duplicates(['movie_title'], inplace=True)
 	return df
 
 def file_exists(filename):
