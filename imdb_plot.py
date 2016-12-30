@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
 from mpl_toolkits.mplot3d import axes3d
+import math
 
 style.use('fivethirtyeight')
 
@@ -259,5 +260,126 @@ def plot_imdb_vs_genre(sorted_genres):
 	plt.legend()
 	plt.title('Top '+str(len(sorted_genres))+' most scored genres', fontsize=16)
 	plt.subplots_adjust(bottom=0.15)
+	plt.show()
+
+def plot_genre_vs_movie_count(top_genres):
+	print(top_genres)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+
+	xs = []
+	ys = []
+	for t in top_genres:
+		xs.append(t[0])
+		ys.append(t[1])
+
+	x = np.arange(len(xs))
+	ax1.bar(x, ys, color='lightslategrey', label='Movie Count', width=0.45)
+	ax1.set_xticks(x)
+	ax1.set_xticklabels(xs, rotation=45, ha='left')
+
+	# show values of each bar
+	rects = ax1.patches
+	i = 0
+	for rect in rects:
+		height = rect.get_height()
+		ax1.text(rect.get_x() + rect.get_width()/2, height*1.01, ys[i], ha='center', va='bottom')
+		i+=1
+
+	plt.title('Top '+str(len(top_genres))+' genres by movie count', fontsize=16)
+	plt.legend()
+	plt.subplots_adjust(bottom=0.15)
+	plt.show()
+
+def plot_director_vs_number_of_movies(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+	ax2 = ax1.twinx()
+
+	x = np.arange(len(df))
+	xlabels = np.array(df.reset_index()['director_name'])
+	y1 = np.array(df['movie_count'])
+	y2 = np.array(df['imdb_mean'])
+
+	ax1.bar(x, y1, color='mediumseagreen', label='Movie Count', width=0.6, alpha=0.3)
+	ax1.set_ylabel('Movie Count')
+	ax1.set_xticks(x)
+	ax1.set_xticklabels(xlabels, rotation=60, ha='center')
+	ax1.grid()
+
+	ax2.plot(x, y2, color='darkslategray', label='IMDB Score', ls='--')
+	ax2.set_ylabel('IMDB Score')
+	ax2.set_ylim([df['imdb_mean'].min()-2, df['imdb_mean'].max()*1.1])
+
+	# show values of each bar
+	rects = ax1.patches
+	i = 0
+	for rect in rects:
+		height = rect.get_height()
+		ax1.text(rect.get_x() + rect.get_width()/2, height*1.01, y1[i], ha='center', va='bottom')
+		i+=1
+
+	charts1, labels1 = ax1.get_legend_handles_labels()
+	charts2, labels2 = ax2.get_legend_handles_labels()
+	ax2.legend(charts1+charts2 ,labels1+labels2, loc=0)
+
+	plt.title('Top '+str(len(df))+' Directors by movie count', fontsize=15)
+	plt.subplots_adjust(bottom=0.30, right=0.90)
+	plt.show()
+
+def plot_director_vs_imdb(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+
+	x = np.arange(len(df))
+	xlabels = np.array(df.reset_index()['director_name'])
+	y = np.array(df['imdb_mean'])
+
+	ax1.bar(x, y, label='IMDB Mean', color='darkturquoise')
+	ax1.set_xticks(x)
+	ax1.set_xticklabels(xlabels, rotation=60, ha='center')
+	ax1.set_ylim([df['imdb_mean'].min()-2, df['imdb_mean'].max()*1.1])
+
+	rects = ax1.patches
+	i = 0
+	for rect in rects:
+		height = rect.get_height()
+		ax1.text(rect.get_x() + rect.get_width()/2, height*1.01, '%.2f' % (y[i]), ha='center', va='bottom')
+		i+=1
+
+	plt.ylabel('IMDB Score')
+	plt.xlabel('Director')
+	plt.legend()
+	plt.subplots_adjust(bottom=0.3)
+	plt.title('Top '+str(len(df))+' most scored directors on IMDB site\n(Only directors with at least 3 movies)', fontsize=15)
+	plt.show()
+
+def plot_most_profitable_movies(df):
+	print(df)
+	fig = plt.figure()
+	ax1 = plt.subplot2grid((1,1), (0,0))
+
+	width = 0.4 # the width of the bars
+
+	x = np.arange(len(df))
+	xlabels = np.array(df['movie_title'])
+	y1 = np.array(df['budget'])
+	y2 = np.array(df['gross'])
+	y3 = np.array(df['profit'])
+
+	ax1.bar(x, y2, label='Gross', color='lightgreen', width=width)
+	ax1.bar(x, y1, label='Budget', color='khaki', width=width)
+	ax1.bar(x + width, y3, label='Profit', color='lightblue', width=width)
+
+	ax1.set_xticks(x + width)
+	ax1.set_xticklabels(xlabels, rotation=82, ha='center')
+	ax1.set_ylim([0, round(df['profit'].max()*1.7)])
+
+	plt.ylabel('$ (100,000,000)')
+	plt.title('Top '+str(len(df))+' most profitable movies')
+	plt.legend()
+	plt.subplots_adjust(bottom=0.35)
 	plt.show()
 

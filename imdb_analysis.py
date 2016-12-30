@@ -82,35 +82,23 @@ def imdb_vs_cast_facebook_likes(df, plot=False, top=20):
 		iplot.plot_imdb_vs_cast_facebook_likes(df2)
 	return df2
 
-def get_genres_count(df):
-	c = Counter()
-	genres = df['genres'].dropna()
-	for g in genres:
-		g = g.split('|')
-		c.update(g)
-	#print(c)
-	return c
-
-def director_vs_number_of_movies(df):
+# it will return the top 20 (default) directors that directed more movies
+def director_vs_number_of_movies(df, plot=False, top=20):
 	df2 = df[['director_name', 'movie_title', 'imdb_score']]
 	df2 = df2.groupby('director_name')['movie_title', 'imdb_score'].agg(['count', 'mean'])
-	df2.columns = ['movie_counts', 'imdb_mean']
-	df2 = df2.sort_values(by='imdb_mean', ascending=False)
-	print(df2)
-
-'''
-This is a superficial comparision between budget and gross. 
-I'm not considering a bunch of facts like: 
-	currency(Dollar, Real, etc)
-	the 'value' of dollar in the course of time
-'''
-def budget_vs_gross(df):
-	df2 = df[['movie_title', 'budget', 'gross']]
-	df2['profit'] = df['gross'] - df['budget']
-	df2.dropna(inplace=True)
-	df2.drop_duplicates(['movie_title'], inplace=True)
-	#print(df2)
+	df2.columns = ['movie_count', 'imdb_mean']
+	df2 = df2.sort_values(by='movie_count', ascending=False)[:top]
+	if plot:
+		iplot.plot_director_vs_number_of_movies(df2)
 	return df2
+
+def get_movie_count_by_genre(df):
+	genres_list = df['genres'].tolist()
+	genre_counter = Counter()
+	for genres in genres_list:
+		g = genres.split('|')
+		genre_counter.update(g)
+	return genre_counter
 
 # it will return the top 10 (default) most scored genres
 def imdb_vs_genre(df, plot=False, top=10):
@@ -119,10 +107,7 @@ def imdb_vs_genre(df, plot=False, top=10):
 	genres_list = df['genres'].tolist()
 	imdb_score_list = df['imdb_score'].tolist()
 	
-	genre_counter = Counter()
-	for genres in genres_list:
-		g = genres.split('|')
-		genre_counter.update(g)
+	genre_counter = get_movie_count_by_genre(df)
 
 	# get the imdb score sum for each genre
 	imdb_sum_by_genre = {}
@@ -145,12 +130,50 @@ def imdb_vs_genre(df, plot=False, top=10):
 		iplot.plot_imdb_vs_genre(sorted_genres)
 	return sorted_genres
 
+def genre_vs_movie_count(df, plot=False, top=10):
+	genre_movies_count = get_movie_count_by_genre(df)
+	top_genres = genre_movies_count.most_common(top)
+	if plot:
+		iplot.plot_genre_vs_movie_count(top_genres)
+	return top_genres
+
+# return the top 20 (default) most scored directors (only the ones what has at least 3 movies on IMDB site)
+def director_vs_imdb(df, plot=False, top=20):
+	df2 = df[['director_name', 'movie_title', 'imdb_score']]
+	df2 = df2.groupby('director_name')['movie_title', 'imdb_score'].agg(['count', 'mean'])
+	df2.columns = ['movie_count', 'imdb_mean']
+	df2 = df2.sort_values(by='imdb_mean', ascending=False)
+	df2 = df2[ df2['movie_count'] > 2 ][:top]
+	df2 = df2[['imdb_mean']]
+	if plot:
+		iplot.plot_director_vs_imdb(df2)
+	return df2
+
+'''
+This is a superficial comparision between budget and gross. 
+I'm not considering a bunch of facts like: 
+	currency(Dollar, Real, etc)
+	the 'value' of dollar in the course of time
+'''
+def budget_vs_gross(df):
+	df2 = df[['movie_title', 'budget', 'gross']]
+	df2['profit'] = df['gross'] - df['budget']
+	df2.dropna(inplace=True)
+	print(df2)
+	return df2
+
+def most_profitable_movies(df, plot=False, top=20):
+	df2 = budget_vs_gross(df)
+	df2 = df2.sort_values(by='profit', ascending=False)[:top]
+	if plot:
+		iplot.plot_most_profitable_movies(df2)
+	return df2
 
 # Data Analysis
 # (OK) imdb vs country |  (OK) imdb vs movie year |  (OK) imdb vs facebook popularity 
 # (OK) imdb vs director facebook popularity |  (OK) imdb vs cast facebook popularity
-#  imdb vs genre |  genre vs movies count |  director vs number of movies |  director vs imdb score
-#  comparision between budget and gross
+# (OK) imdb vs genre |  (OK) genre vs movies count | (OK) director vs number of movies | (OK) director vs imdb score
+# (OK) comparision between budget and gross
 
 df = iutil.get_dataset()
 #imdb_vs_country(df, True)
@@ -158,4 +181,8 @@ df = iutil.get_dataset()
 #imdb_vs_movie_facebook_likes(df, True)
 #imdb_vs_director_facebook_likes(df, True)
 #imdb_vs_cast_facebook_likes(df, True)
-imdb_vs_genre(df, True)
+#imdb_vs_genre(df, True)
+#genre_vs_movie_count(df, True)
+#director_vs_number_of_movies(df, True)
+#director_vs_imdb(df, True)
+most_profitable_movies(df, True)
